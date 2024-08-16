@@ -1,0 +1,5 @@
+BUILD MODEL
+    - dependent variable is expected points
+    - model expected points 
+        - ppoints_scored = f(relative team strength, home/away, trailing threat, trailing inf, trailing gp90, trailing ap90,  )
+BACKTEST MODEL

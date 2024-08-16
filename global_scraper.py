@@ -1,3 +1,5 @@
+#%%
+
 from parsers import *
 from cleaners import *
 from getters import *
@@ -13,12 +15,13 @@ def parse_data():
     print("Getting data")
     data = get_data()
     print("Parsing summary data")
-    parse_players(data["elements"], base_filename)
+    parse_players(data["elements"], base_filename) #write 'elements' to players_raw.csv
     xPoints = []
     for e in data["elements"]:
         xPoint = {}
         xPoint['id'] = e['id']
-        xPoint['xP'] = e['ep_this']
+        xPoint['xP'] = e['ep_this'] # ep_this has null value until GW1 begins, by which time we can't submit a team
+        #xPoint['xP'] = e['ep_next']
         xPoints += [xPoint]
     gw_num = 0
     events = data["events"]
@@ -26,11 +29,11 @@ def parse_data():
         if event["is_current"] == True:
             gw_num = event["id"]
     print("Cleaning summary data")
-    clean_players(base_filename + 'players_raw.csv', base_filename)
+    clean_players(base_filename + 'players_raw.csv', base_filename) #write updated summary stats for players to cleaned_players.csv
     print("Getting fixtures data")
-    fixtures(base_filename)
+    fixtures(base_filename) #write updated fixtures data to fixtures.csv
     print("Getting teams data")
-    parse_team_data(data["teams"], base_filename)
+    parse_team_data(data["teams"], base_filename) 
     print("Extracting player ids")
     id_players(base_filename + 'players_raw.csv', base_filename)
     player_ids = get_player_ids(base_filename)
@@ -44,7 +47,8 @@ def parse_data():
         parse_player_gw_history(player_data["history"], player_base_filename, name, i)
     if gw_num > 0:
         print("Writing expected points")
-        with open(os.path.join(gw_base_filename, 'xP' + str(gw_num) + '.csv'), 'w+') as outf:
+        os.makedirs(gw_base_filename, exist_ok=True)
+        with open(os.path.join(gw_base_filename, 'xP' + str(gw_num) + '.csv'), 'w+', newline='') as outf:
             w = csv.DictWriter(outf, ['id', 'xP'])
             w.writeheader()
             for xp in xPoints:
@@ -59,9 +63,11 @@ def parse_data():
 def fixtures(base_filename):
     data = get_fixtures_data()
     parse_fixtures(data, base_filename)
-
+    
+#%%
 def main():
     parse_data()
 
 if __name__ == "__main__":
     main()
+

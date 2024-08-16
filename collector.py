@@ -1,3 +1,5 @@
+#%%
+
 import os
 import sys
 import csv
@@ -117,5 +119,6 @@ def main():
     merge_all_gws(int(sys.argv[1]), sys.argv[2])
     #collect_gw(26, sys.argv[1], sys.argv[2])
 
+#%%
 if __name__ == '__main__':
     main()
