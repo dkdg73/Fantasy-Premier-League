@@ -8,19 +8,21 @@ import pandas as pd
 # step 3: extract lagged data from prior gw.csv files
 # turn the script into a function, loop the function to run for each week needed to build the dataset for
  
-# step 1 
 season = '2023-24'
 gw = 1
+n = 38
 
 season_path = f'data/{season}/'
 gw_path = season_path + f'gws/'
 gw_filepath = gw_path + f'gw{gw}.csv'
-params = ['name', 'position', 'team', 'total_points', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes', 'was_home', 'opponent_team']
 
+#step 1: get df for the gameweek
 gw_df = pd.read_csv(gw_filepath)
+params = ['name', 'position', 'team', 'value', 'total_points', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes', 'was_home', 'opponent_team']
 gw_df = gw_df.loc[:, params]
 
-#step 2
+#%%
+#step 2: get opponent difficulty from fixtures.csv and add to gameweek df
 fixs_df = pd.read_csv(f'{season_path}fixtures.csv')
 gw_fixs_df = fixs_df[fixs_df['event'] == gw]
 
@@ -30,8 +32,8 @@ team_diff = pd.concat([h_diff, a_diff]).sort_values('team')
 team_diff = dict(team_diff.values)
 gw_df['opponent_team_difficulty']  = gw_df['opponent_team'].map(team_diff)
 #%%
-#step 3
-r = range(gw - 1, gw - 1 - 18, -1)
+#step 3: get trailing data
+r = range(gw - 1, gw - 1 - 19, -1)
 
 def get_prev_season(season):
 
@@ -56,7 +58,7 @@ for filepath in lagged_gw_filepaths:
     df = pd.read_csv(filepath)
     lagged_data_df = pd.concat([lagged_data_df, df], axis = 0)
 
-lag_params = ['name', 'position', 'team', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes']
+lag_params = ['name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes']
 lagged_data_df = lagged_data_df.loc[:, lag_params]             
 
 players = list(set(gw_df['name']))
@@ -66,8 +68,9 @@ def get_model_gw_df(lagged_data_df, gw_df, players):
     for player in players:
         lagged_player_data = lagged_data_df[lagged_data_df['name']==player].loc[:, 'xP':'minutes'].sum()
         lagged_player_data_90 = lagged_player_data.iloc[:-1].div(lagged_player_data.iloc[-1])
-        lagged_player_data_90['mins_p_match'] = lagged_player_data['minutes'] / 18
+        lagged_player_data_90['mins_p_match'] = lagged_player_data['minutes'] / 19
         lagged_player_data_90 = lagged_player_data_90.to_frame().T
+        lagged_player_data_90.columns = 'tr_' + lagged_player_data_90.columns
         gw_player_data = gw_df[gw_df['name'] == player]
         lagged_player_data_90.index = gw_player_data.index
         player_model_data = pd.concat([gw_player_data, lagged_player_data_90], axis = 1)
