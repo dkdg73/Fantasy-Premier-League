@@ -65,7 +65,8 @@ def get_gw_data(season, gw):
     
     #step 1: get gameweek df
     gw_df = pd.read_csv(gw_filepath, encoding = 'ISO-8859-1')
-    params = ['name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes', 'was_home', 'opponent_team']
+    gw_df['gw'] = f'{season}-{gw}'
+    params = ['gw', 'name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes', 'was_home', 'opponent_team']
     missing_params = [param for param in params if param not in gw_df.columns]
     for col in missing_params:
         gw_df[col] = np.nan

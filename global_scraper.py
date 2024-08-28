@@ -7,10 +7,16 @@ from collector import collect_gw, merge_gw
 from understat import parse_epl_data
 import csv
 
-def parse_data():
-    """ Parse and store all the data
+def parse_data(season, gw = None):
+    """ 
+    Parse and store all the data for a given gw
+    Default gw will be latest
+    Input gw to alter
     """
-    season = '2024-25'
+    if gw != None:
+        if type(gw) != int:
+            Exception("gw must be integer")
+    season = season
     base_filename = 'data/' + season + '/'
     print("Getting data")
     data = get_data()
@@ -23,11 +29,14 @@ def parse_data():
         xPoint['xP'] = e['ep_this'] # ep_this has null value until GW1 begins, by which time we can't submit a team
         #xPoint['xP'] = e['ep_next']
         xPoints += [xPoint]
-    gw_num = 0
-    events = data["events"]
-    for event in events:
-        if event["is_current"] == True:
-            gw_num = event["id"]
+    if gw == None:
+        gw_num = 0
+        events = data["events"]
+        for event in events:
+            if event["is_current"] == True:
+                gw_num = event["id"]
+    else:
+        gw_num = gw
     print("Cleaning summary data")
     clean_players(base_filename + 'players_raw.csv', base_filename) #write updated summary stats for players to cleaned_players.csv
     print("Getting fixtures data")
@@ -66,8 +75,10 @@ def fixtures(base_filename):
     
 #%%
 def main():
-    parse_data()
+    parse_data('2024-25', gw = 1)
 
 if __name__ == "__main__":
     main()
 
+
+# %%
