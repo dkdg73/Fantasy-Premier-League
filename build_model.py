@@ -174,8 +174,39 @@ latest_gk_value = latest_gk.loc[:,['name', 'team', 'tr_minutes', 'value'] + gk_p
 latest_gk_value['y_hat'] = latest_gk_value.loc[
     :, gk_params[1:]].mul(gk_coeffs, axis = 1).sum(axis =1)
 latest_gk_value['points_gap'] = latest_gk_value['y_hat'] - latest_gk_value['tr_total_points']
-latest_gk_value.sort_values('points_gap', ascending=False)
+#latest_gk_value.sort_values('points_gap', ascending=False)
 
+#%%
+# PtsVal ratios aren't as useful as incP/incV ratio
+# incPtsVva ratios are the incremental Points earned per incremental V
+# incV is the Val - min(Val)
+# incP is Pts - mean(bottom Val points) 
+gk_base_val_df = latest_gk_value[latest_gk_value['value'] == latest_gk_value['value'].min()]
+#gk_base_val = gk_base_val_df['value'].median()
+gk_base_val = 4
+gk_base_pts = gk_base_val_df.loc[:, 'tr_total_points'].quantile(0.1)
+
+latest_gk_value['incPV'] = (latest_gk_value['tr_total_points'] - gk_base_pts) / (latest_gk_value['value'] - gk_base_val) 
+latest_gk_value['PV'] =  (latest_gk_value['tr_total_points']) / (latest_gk_value['value'])
+latest_gk_value['incEPV'] = (latest_gk_value['y_hat'] - gk_base_pts) / (latest_gk_value['value'] - gk_base_val) 
+latest_gk_value['EPV'] =  (latest_gk_value['y_hat']) / (latest_gk_value['value'])
+
+
+gk_col_order = ['name',
+ 'team',
+ 'value',
+ 'tr_total_points',
+ 'y_hat',
+ 'points_gap',
+ 'PV',
+ 'incPV',
+ 'EPV', 
+ 'incEPV',
+ 'tr_clean_sheets',
+ 'tr_goals_conceded',
+ 'tr_influence']
+
+latest_gk_value = latest_gk_value[gk_col_order]
 #%%
 # build DEF position
 mid_params = ['tr_goals_conceded', 'tr_influence', 'tr_rel', 'tr_expected_goal_involvements']
