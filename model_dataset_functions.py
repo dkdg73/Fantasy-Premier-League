@@ -1,6 +1,9 @@
 #%%
 import pandas as pd
 import numpy as np
+import os
+import csv
+import re
 
 pd.set_option('future.no_silent_downcasting', True) #to prevent FutureWarning: Downcasting behaviour in 'replace' is deprecated ...
 
@@ -68,7 +71,7 @@ def get_gw_data(season, gw):
     #step 1: get gameweek df
     gw_df = pd.read_csv(gw_filepath, encoding = 'ISO-8859-1')
     gw_df['gw'] = f'{season}-{gw}'
-    params = ['gw', 'name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes', 'was_home', 'opponent_team']
+    params = ['gw', 'name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'starts', 'clean_sheets', 'saves','minutes', 'was_home', 'opponent_team']
     missing_params = [param for param in params if param not in gw_df.columns]
     for col in missing_params:
         gw_df[col] = np.nan
@@ -129,7 +132,7 @@ def get_trailing_data(season, gw, lags = 19):
             continue
         lagged_data_df = pd.concat([lagged_data_df, df], axis=0)
 
-    lag_params = ['name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'minutes']
+    lag_params = ['name', 'position', 'team', 'value', 'total_points', 'xP', 'goals_scored', 'assists', 'goals_conceded', 'expected_goals', 'expected_assists', 'expected_goal_involvements', 'influence', 'creativity', 'threat', 'starts', 'clean_sheets', 'saves', 'minutes']
     
     missing_params = [param for param in lag_params if param not in lagged_data_df.columns]
     for col in missing_params:
@@ -165,7 +168,7 @@ def combine_gw_trailing(gw_data, trailing_data):
 
         elif player_rows == 2: # some gw have teams play twice, recalculate lag data accordingly
 #            print(player, player_rows)
-            lagged_data_to_input = gw_player_data.iloc[0, 4:16].to_frame().T
+            lagged_data_to_input = gw_player_data.iloc[0, 4:19].to_frame().T
             first_gw_match_lagged_player_data = trailing_data[trailing_data['name']==player].loc[:, 'total_points':'minutes']
             second_gw_match_lagged_player_data = pd.concat([lagged_data_to_input, first_gw_match_lagged_player_data.iloc[:-1]])
             aggregated_first = first_gw_match_lagged_player_data.sum().to_frame().T
@@ -299,3 +302,5 @@ def generate_full_season_dataset(starting_season, seasons_to_run = 1, lags_for_t
     print('Data gathering complete')
 
 
+
+# %%

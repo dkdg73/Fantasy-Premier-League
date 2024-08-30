@@ -158,23 +158,23 @@ season_data_dic = dict(zip(seasons, dfs))
 
 #%%
 #build GK models for each season
-gk_params = ['total_points', 'tr_goals_conceded', 'tr_influence', 'tr_rel']
-gk_model = build_model_dic('GK', season_data_dic, gk_params, print_output=False)
-gk_model_df = generate_params_df(gk_model, save_name='gk_total_points')
+gk_params = ['tr_total_points', 'tr_clean_sheets', 'tr_goals_conceded', 'tr_influence']
+gk_model = build_model_dic('GK', season_data_dic, gk_params, intercept=False, print_output=True)
+gk_model_df = generate_params_df(gk_model, save_name='gk_tr_total_points')
 #%%
 current_gw = '2024-25-2'
 gk_coeffs = gk_model_df.loc['Coefficients'].median(axis=1)
 latest_data = pd.read_csv('data/2024-25/model_data.csv', index_col=0)
 latest_data = latest_data[latest_data.loc[:, 'gw']==current_gw]
 latest_gk = latest_data[latest_data['position'] == 'GK']
-latest_gk = latest_gk[latest_gk['tr_minutes'] > 80]
+latest_gk = latest_gk[latest_gk['tr_minutes'] > 70]
 latest_gk['tr_rel'] = latest_gk['tr_total_points'] - latest_gk['tr_xP']
-latest_gk_value = latest_gk.loc[:,['name', 'team', 'tr_minutes', 'tr_total_points'] + gk_params]
+latest_gk_value = latest_gk.loc[:,['name', 'team', 'tr_minutes', 'value'] + gk_params]
 #%%
-latest_gk_value['est_value'] = latest_gk_value.loc[
-    :, 'tr_goals_conceded':'tr_rel'].mul(gk_coeffs.loc['tr_goals_conceded':'tr_rel'], axis = 1).sum(axis =1) + gk_coeffs.loc['const']
-latest_gk_value['cheapness'] = latest_gk_value['est_value'] - latest_gk_value['value']
-latest_gk_value.sort_values('cheapness', ascending=False)
+latest_gk_value['y_hat'] = latest_gk_value.loc[
+    :, gk_params[1:]].mul(gk_coeffs, axis = 1).sum(axis =1)
+latest_gk_value['points_gap'] = latest_gk_value['y_hat'] - latest_gk_value['tr_total_points']
+latest_gk_value.sort_values('points_gap', ascending=False)
 
 #%%
 # build DEF position
